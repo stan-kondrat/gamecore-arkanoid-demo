@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,6 +19,8 @@ namespace arkanoid
 		const int VIEWPORT_HEIGHT = 480;
 		const int PLATFORM_PADDING = 10;
 		const int PLATFORM_HEIGHT = 10;
+		const float PLATFORM_INERT = 0.5f;
+		const float PLATFORM_SPEED = 2f;
 
         private Texture2D background;
 
@@ -27,10 +30,12 @@ namespace arkanoid
 		public struct GameObject
 		{
 			public Texture2D texture;
-			public int x;
-			public int y;
-			public int width;
-			public int height;
+			public float x;
+			public float y;
+			public float width;
+			public float height;
+			public float dx;
+			public float dy;
 		}
 
 		private GameObject platform;
@@ -44,10 +49,11 @@ namespace arkanoid
 
             Content.RootDirectory = "Content";
 
-			platform.width = VIEWPORT_WIDTH / 10;
+			platform.width = VIEWPORT_WIDTH / 8;
 			platform.height = PLATFORM_HEIGHT;
 			platform.x = (VIEWPORT_WIDTH - platform.width) / 2;
 			platform.y = VIEWPORT_HEIGHT - PLATFORM_PADDING - platform.height;
+			platform.dx = 0;
 
 			ball.width = 20;
 			ball.height = 20;
@@ -97,6 +103,49 @@ namespace arkanoid
             }
             #endif
 
+			KeyboardState state = Keyboard.GetState();
+
+			// move right
+			if (state.IsKeyDown(Keys.Right))  {
+				platform.x += PLATFORM_SPEED + platform.dx;
+				platform.dx += PLATFORM_INERT;
+			}
+
+			// move left
+			if (state.IsKeyDown(Keys.Left))
+			{
+				platform.x += -PLATFORM_SPEED + platform.dx;
+				platform.dx += -PLATFORM_INERT;
+			}
+
+			// keep momentum
+			if ((state.IsKeyUp(Keys.Right) && state.IsKeyUp(Keys.Left)))
+			{
+				if (platform.dx < -PLATFORM_INERT)
+				{
+					platform.x += platform.dx;
+					platform.dx += PLATFORM_INERT;
+				}
+				if (platform.dx > PLATFORM_INERT)
+				{
+					platform.x += platform.dx;
+					platform.dx += -PLATFORM_INERT;
+				}
+			}
+
+			// check borders
+			if (platform.x <= 0)
+			{
+				platform.x = 0;
+				platform.dx = 0;
+			}
+			if (platform.x + (float)platform.width >= VIEWPORT_WIDTH)
+			{
+				platform.x = (float)VIEWPORT_WIDTH - (float)platform.width;
+				platform.dx = 0;
+			}
+
+
             timeSinceLastUpdate += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             if (timeSinceLastUpdate >= timeToNextUpdate)
@@ -124,13 +173,13 @@ namespace arkanoid
 
 			spriteBatch.Draw(
 				platform.texture, 
-				new Rectangle(platform.x, platform.y, platform.width, platform.height), 
+				new Rectangle((int)platform.x, (int)platform.y, (int)platform.width, (int)platform.height), 
 				Color.White
 			);
 
 			spriteBatch.Draw(
 				ball.texture,
-				new Rectangle(ball.x, ball.y, ball.width, ball.height),
+				new Rectangle((int)ball.x, (int)ball.y, (int)ball.width, (int)ball.height),
 				Color.White
 			);
 
