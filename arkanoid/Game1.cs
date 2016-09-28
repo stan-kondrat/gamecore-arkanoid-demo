@@ -19,13 +19,15 @@ namespace arkanoid
 		const int VIEWPORT_HEIGHT = 480;
 		const int PLATFORM_PADDING = 10;
 		const int PLATFORM_HEIGHT = 10;
-		const float PLATFORM_INERT = 0.5f;
+		const float PLATFORM_INERT = 1f;
 		const float PLATFORM_SPEED = 2f;
 
         private Texture2D background;
 
         private const float timeToNextUpdate = 1.0f / 30.0f;
         private float timeSinceLastUpdate;
+
+		bool gameStarted = false;
 
 		public struct GameObject
 		{
@@ -49,7 +51,7 @@ namespace arkanoid
 
             Content.RootDirectory = "Content";
 
-			platform.width = VIEWPORT_WIDTH / 8;
+			platform.width = VIEWPORT_WIDTH / 5;
 			platform.height = PLATFORM_HEIGHT;
 			platform.x = (VIEWPORT_WIDTH - platform.width) / 2;
 			platform.y = VIEWPORT_HEIGHT - PLATFORM_PADDING - platform.height;
@@ -59,6 +61,8 @@ namespace arkanoid
 			ball.height = 20;
 			ball.x = (VIEWPORT_WIDTH - ball.width) / 2;
 			ball.y = VIEWPORT_HEIGHT - PLATFORM_PADDING - platform.height - ball.height;
+			ball.dx = -1f;
+			ball.dy = -2f;
         }
 
         /// <summary>
@@ -105,20 +109,22 @@ namespace arkanoid
 
 			KeyboardState state = Keyboard.GetState();
 
-			// move right
+			// platform move right
 			if (state.IsKeyDown(Keys.Right))  {
 				platform.x += PLATFORM_SPEED + platform.dx;
 				platform.dx += PLATFORM_INERT;
+				gameStarted = true;
 			}
 
-			// move left
+			// platform move left
 			if (state.IsKeyDown(Keys.Left))
 			{
 				platform.x += -PLATFORM_SPEED + platform.dx;
 				platform.dx += -PLATFORM_INERT;
+				gameStarted = true;
 			}
 
-			// keep momentum
+			// platform keep momentum
 			if ((state.IsKeyUp(Keys.Right) && state.IsKeyUp(Keys.Left)))
 			{
 				if (platform.dx < -PLATFORM_INERT)
@@ -133,7 +139,7 @@ namespace arkanoid
 				}
 			}
 
-			// check borders
+			// platform check borders
 			if (platform.x <= 0)
 			{
 				platform.x = 0;
@@ -143,6 +149,34 @@ namespace arkanoid
 			{
 				platform.x = (float)VIEWPORT_WIDTH - (float)platform.width;
 				platform.dx = 0;
+			}
+
+			// ball move
+			if (gameStarted)
+			{
+				ball.x += ball.dx;
+				ball.y += ball.dy;
+			}
+
+			// collision top border
+			if (ball.y + ball.dy < 0)
+			{
+				ball.dy = -ball.dy;
+			}
+
+			// collision left-right borders
+			if (ball.x + ball.dx < 0 || ball.x + ball.dx + ball.width > VIEWPORT_WIDTH)
+			{
+				ball.dx = -ball.dx;
+			}
+
+
+			// collision ball and platform
+			if ( platform.y < ball.y + ball.height + ball.dy
+			    && platform.x + platform.dx < ball.x + ball.dx
+			    && platform.x + platform.dx + platform.width > ball.x + ball.dx + ball.width)
+			{
+				ball.dy = -ball.dy;
 			}
 
 
