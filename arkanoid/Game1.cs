@@ -21,6 +21,13 @@ namespace arkanoid
 		const int PLATFORM_HEIGHT = 10;
 		const float PLATFORM_INERT = 1f;
 		const float PLATFORM_SPEED = 2f;
+		const int BOX_TOP = 80;
+		const int BOX_HEIGHT = 30;
+		const int BOX_WIDTH = 45;
+		const int BOX_PADDING = 20;
+		const int BOX_COLUMNS = 7;
+		const int BOX_ROWS = 3;
+
 
         private Texture2D background;
 
@@ -42,6 +49,7 @@ namespace arkanoid
 
 		private GameObject platform;
 		private GameObject ball;
+		GameObject[] boxes = new GameObject[BOX_COLUMNS * BOX_ROWS];
 
 		public Game1() 
         {
@@ -63,6 +71,21 @@ namespace arkanoid
 			ball.y = VIEWPORT_HEIGHT - PLATFORM_PADDING - platform.height - ball.height;
 			ball.dx = -1f;
 			ball.dy = -2f;
+
+			float boxXoffset = (VIEWPORT_WIDTH - BOX_COLUMNS * BOX_WIDTH - BOX_COLUMNS * BOX_PADDING) / 2;
+			int i = 0;
+			for (int column = 0; column < BOX_COLUMNS; column++)
+			{
+				for (int row = 0; row < BOX_ROWS; row++)
+				{
+					var box = new GameObject();
+					box.width = BOX_WIDTH;
+					box.height = BOX_HEIGHT;
+					box.x = boxXoffset + column * BOX_WIDTH + column * BOX_PADDING;
+					box.y = BOX_TOP + row * BOX_HEIGHT + row * BOX_PADDING;
+					boxes[i++] = box;
+				}
+			}
         }
 
         /// <summary>
@@ -88,6 +111,11 @@ namespace arkanoid
             background = this.Content.Load<Texture2D>("background");
 			platform.texture = this.Content.Load<Texture2D>("blank");
 			ball.texture = this.Content.Load<Texture2D>("ball");
+
+			for (int i = 0; i < boxes.Length; i++)
+			{
+				boxes[i].texture = this.Content.Load<Texture2D>("blank");
+			}
         }
 
         /// <summary>
@@ -210,6 +238,16 @@ namespace arkanoid
 				new Rectangle((int)platform.x, (int)platform.y, (int)platform.width, (int)platform.height), 
 				Color.White
 			);
+
+			for (int i = 0; i < boxes.Length; i++)
+			{
+				spriteBatch.Draw(
+					boxes[i].texture,
+					new Rectangle((int)boxes[i].x, (int)boxes[i].y, (int)boxes[i].width, (int)boxes[i].height),
+					Color.White
+				);
+			}
+
 
 			spriteBatch.Draw(
 				ball.texture,
